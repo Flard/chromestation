@@ -1,0 +1,132 @@
+<html>
+	<head>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+				font: 10pt Arial, sans-serif;
+				}
+
+			#page {
+				margin: 0;
+				width: 400px;
+				}
+			
+			#banner {
+				width: 400px;
+				height: 75px;
+				background-color: yellow;
+				}
+			
+			h1 {
+				margin: 5px 0 0 0;
+				padding: 0;
+				font: bold 10pt Arial;
+				}
+			
+			label {
+				float: left;
+				width: 100px;
+				padding: 4px 0px;
+				}
+			
+			.labelCheckbox {
+				float: none !important;
+				width: 100%;
+				}
+			
+			#advanced {
+				display: none;
+				}
+			
+			#contents {
+				margin: 0;
+				padding: 10px;
+				}
+			
+			#advanced:target {
+				display: block;
+				}
+
+			#error  {
+				color: red;
+				background-color: #ffeeee;
+				padding: 5px 20px;
+				border-radius: 5px;
+				}
+			
+			#loadingpanel {
+				display: none;
+				}
+		</style>
+		<script type="text/javascript">
+			function login() {
+				save_options();
+				chrome.extension.getBackgroundPage().tryLogin();
+				showLoading();
+			}
+
+			function showLoading() {
+				document.getElementById('loginpanel').style.display = 'none';
+				document.getElementById('loadingpanel').style.display = 'block';
+
+				window.setTimeout(function() { window.close(); }, 500);
+			}
+
+			function save_options() {
+				//@TODO: validate
+				localStorage["address"] = document.getElementById('address').value;
+				localStorage["username"] = document.getElementById('username').value;
+				localStorage["password"] = document.getElementById('password').value;
+				localStorage["usessl"] = (document.getElementById('usessl').checked ? 'true' : 'false');
+			}
+
+			function restore_options() {
+				//@TODO: display empty if not set
+				document.getElementById('address').value = (localStorage["address"] == undefined) ? "" : localStorage["address"];
+				document.getElementById('username').value = (localStorage["username"] == undefined) ? "admin" : localStorage["username"];
+				document.getElementById('password').value = (localStorage["password"] == undefined) ? "" : localStorage["password"];
+				document.getElementById('usessl').checked = (localStorage["usessl"] == "true");
+
+				if (chrome.extension.getBackgroundPage().lastError != undefined)
+				{
+					document.getElementById('error').innerText = chrome.extension.getBackgroundPage().lastError;
+				}
+			}
+		</script>
+	</head>
+	<body onLoad="restore_options()">
+		<div id="page">
+			<div id="banner"></div>
+			<div id="contents">
+				<div id="loginpanel">
+					<h1>DiskStation Login</h1>
+					<p id="error"></p>
+					<p>
+						<label for="address">Server adress:</label>
+						<input type="text" name="address" id="address" value="" />
+						<img src="information.png" width="16" height="16" alt="[info]" title="Enter a hostname or IP-adress (eg. 'diskstation.lan' or '192.168.10.2'). You can also override the port name by appending :<portnumber> (e.g. 'diskstation.lan:5000)" />
+					<br />
+						<label for="username">User name:</label>
+						<input type="text" name="username" id="username" value="admin" /><br />
+						<label for="password">Password:</label>
+						<input type="password" name="password" id="password" />
+					</p>
+					<div id="advanced">
+						<p>
+							<label for="usessl" class="labelCheckbox"><input type="checkbox" name="usessl" id="usessl"> Use secure (SSL) connection</label>
+						</p>
+					</div>
+					<p>
+						<a href="#advanced" onClick="">Advanced settings</a>
+						<button onClick="login()">Log in</button>
+					</p>
+				</div>
+				<div id="loadingpanel">
+					<h1>DiskStation Login</h1>
+					<p>Logging in...</p>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

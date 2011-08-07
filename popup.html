@@ -1,0 +1,136 @@
+<html>
+	<head>
+		<style>
+			body {
+				padding: 0;
+				margin: 0;
+				font: 10pt Arial, sans-serif;
+				}
+
+			#page {
+				width: 600px;
+				}
+
+			form {
+				margin: 0;
+				padding: 0;
+				}
+			
+			table {
+				width: 100%;
+				margin-bottom: 10px;
+				}
+			th {
+				background-color: #0099aa;
+				color: white;
+				font-size: 10pt;
+				}
+
+			td {
+				font-size: 8pt;
+				}
+
+			button {
+				padding: 5px 10px;
+				}
+
+			fieldset {
+				margin: 10px;
+				}
+		</style>
+		<script type="text/javascript">
+			function init() {
+				var bgPage = chrome.extension.getBackgroundPage();
+				var ds = bgPage.diskstation;
+
+				var downloadInfo = ds.getDownloadInfo();
+				var tbody = document.getElementsByTagName("TBODY").item(0);
+				for(var i=0;i<downloadInfo.items.length;i++) {
+					var item = downloadInfo.items[i];
+					row = document.createElement("TR");
+
+					text1 = document.createTextNode(item.filename);
+					text2 = document.createTextNode(item.status);
+					text3 = document.createTextNode(item.progress);
+					text4 = document.createTextNode(item.current_size + '/' + item.total_size);
+					text5 = document.createTextNode((item.time_left == undefined) ? '' : item.time_left);
+
+					cell1 = document.createElement("TD"); cell1.appendChild(text1);	row.appendChild(cell1);
+					cell2 = document.createElement("TD"); cell2.appendChild(text2);	row.appendChild(cell2);
+					cell3 = document.createElement("TD"); cell3.appendChild(text3);	row.appendChild(cell3);
+					cell4 = document.createElement("TD"); cell4.appendChild(text4);	row.appendChild(cell4);
+					cell5 = document.createElement("TD"); cell5.appendChild(text5);	row.appendChild(cell5);
+
+					tbody.appendChild(row);
+				}
+			}
+
+			function addTask() {
+				var input = document.getElementById('addtask');
+				var url = input.value;
+				if (url == '') {
+					input.style.backgroundColor = 'red';
+				} else {
+					input.style.backgroundColor = 'white';
+					chrome.extension.getBackgroundPage().addTask(url);
+					input.value = '';
+				}
+			}
+
+			function openDownloadStationTab() {
+				chrome.extension.getBackgroundPage().openDownloadStationTab();
+				window.close();
+			}
+
+			function openFileStationTab() {
+				chrome.extension.getBackgroundPage().openFileStationTab();
+				window.close();
+			}
+
+			function openAudioStationTab() {
+				chrome.extension.getBackgroundPage().openAudioStationTab();
+				window.close();
+			}
+
+			function openManagementStationTab() {
+				chrome.extension.getBackgroundPage().openManagementStationTab();
+				window.close();
+			}
+
+			function logout() {
+				chrome.extension.getBackgroundPage().logout();
+				window.close();
+			}
+		</script>
+	</head>
+	<body onLoad="init()">
+		<div id="page">
+			<div id="downloads" class="tab">
+				<table id="tasks">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Status</th>
+							<th>Progress</th>
+							<th>Size</th>
+							<th>Time left</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+				<fieldset>
+					<form onSubmit="addTask()">
+					<input type="text" name="addtask" id="addtask" size="70" />
+					<button onClick="addTask()"><img src="package_add.png" width="16" height="16" alt="" /> Add</img></button><br />
+					</form>
+					<button onClick="openDownloadStationTab()"><img src="table.png" width="16" height="16" alt="" /> DownloadStation</img></button>
+					<button onClick="openFileStationTab()"><img src="table.png" width="16" height="16" alt="" /> FileStation</img></button>
+					<button onClick="openAudioStationTab()"><img src="table.png" width="16" height="16" alt="" /> AudioStation</img></button>
+					<button onClick="openManagementStationTab()"><img src="table.png" width="16" height="16" alt="" /> ManagementStation</img></button>
+					<button onClick="logout()"><img src="door_open.png" width="16" height="16" alt="" /> Logout</img></button>
+				</fieldset>
+			</div>
+		</div>
+	</body>
+</html>

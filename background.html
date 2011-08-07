@@ -1,0 +1,204 @@
+<html>
+	<head>
+	<!--
+		TODO:
+		- Abort timers on connect
+		- 3 login tries
+		- column texts
+		- AudioStation?
+		- capture torrentlinks
+		- auto refresh in popup
+		- add to list after add
+		- max items in view
+		- banner
+		- display speed in badge text
+		- time remaining
+		- large icons
+
+		- languages
+		- github?
+	-->
+		<title>ChromeStation Background page</title>
+		<script type="text/javascript" src="diskstation.js"></script>
+		<script type="text/javascript">
+			var logging = true;
+			var diskstation = new DiskStation(logging);
+			var lastError = undefined;
+
+			var opts = {
+				badgeText: 'task_count',				// [ 'task_count' / 'speed' / 'none' ]
+				showNoficiations: 'always'				// [ 'always' / 'complete' / 'new' ]
+				};
+
+			function init() {
+				writelog("Initializing...");
+
+				var settingsFilled = areSettingsFilled();
+				writelog('settingsFilled = ' + settingsFilled);
+
+				diskstation.onError = onDiskStationError;
+				diskstation.onAuthenticated = onDiskStationAuthenticated;
+				diskstation.onDownloadTasksUpdated = onDownloadTasksUpdated;
+				diskstation.onDownloadTasksAdded = onDownloadTasksAdded;
+				diskstation.onDownloadTasksCompleted = onDownloadTasksCompleted;				
+
+				if (settingsFilled) {
+					window.setTimeout(function() { tryLogin() }, 10);
+				}
+
+				var result = chrome.contextMenus.create({
+					type: 'normal',
+					title: 'Download with ChromeStation',
+					contexts: ['link'],
+					onclick: onContextMenuClick
+					});
+			}
+
+			function tryLogin() {
+				writelog("Trying to login...");
+				chrome.browserAction.setIcon({ path: 'icon_link.png' });
+				chrome.browserAction.setPopup({ popup: 'popup-loading.html' });
+
+				lastError = undefined;
+
+				diskstation.login( 
+					localStorage["address"],
+					localStorage["username"],
+					localStorage["password"],
+					(localStorage["usessl"] == 'true')
+					);
+				
+			}
+
+			function addTask(url) {
+				writelog("Adding task: " + url);
+				diskstation.addTask(url);
+			}
+
+			function logout() {
+				diskstation.logout();
+			}
+
+			function onDiskStationError(message) {
+				chrome.browserAction.setIcon({ path: 'icon_gray.png' });
+				chrome.browserAction.setPopup({ popup: 'popup-login.html' });
+				lastError = message;
+			}
+
+			function onDiskStationAuthenticated() {
+				chrome.browserAction.setIcon({ path: 'icon.png' });
+				chrome.browserAction.setPopup({ popup: 'popup.html' });
+			}
+
+			function onDownloadTasksUpdated(tasks) {
+				switch (opts.badgeText)
+				{
+					case 'task_count':
+						if (tasks.totalError > 0) {
+							chrome.browserAction.setBadgeBackgroundColor({color: [255,0,0,255]});
+							chrome.browserAction.setBadgeText({text: tasks.totalError + ''});
+						} else if (tasks.totalBusy > 0) {
+							chrome.browserAction.setBadgeBackgroundColor({color: [170,255,170,255]});
+							chrome.browserAction.setBadgeText({text: tasks.totalBusy + ''});
+						} else if (tasks.totalPending > 0) {
+							chrome.browserAction.setBadgeBackgroundColor({color: [0,170,255,255]});
+							chrome.browserAction.setBadgeText({text: tasks.totalPending + ''});
+						} else if (tasks.totalComplete > 0) {
+							chrome.browserAction.setBadgeBackgroundColor({color: [170,170,170,255]});
+							chrome.browserAction.setBadgeText({text: tasks.totalComplete + ''});
+						} else {
+							chrome.browserAction.setBadgeText({text: ''});
+						}
+						break;
+					case 'speed':
+						chrome.browserAction.setBadgeBackgroundColor({color: [0,170,255,255]});
+						chrome.browserAction.setBadgeText({text: tasks.total_down});
+						break;
+					default:
+						chrome.browserAction.setBadgeText({text: ''});
+				}
+			}
+
+			function onDownloadTasksAdded(tasks) {
+				var title = 'New task added';
+				var message = 'Now downloading: ' + tasks[0].filename;
+				var notification = webkitNotifications.createNotification(
+				  'package_add.png',  // icon url - can be relative
+				  title,  // notification title
+				  message  // notification body text
+				);
+				notification.show();
+				window.setTimeout(function() { notification.cancel() }, 2500);
+			}
+
+			function onDownloadTasksCompleted(tasks) { 
+				var title = 'Completed';
+				var message = 'Task completed: ' + tasks[0].filename;
+				var notification = webkitNotifications.createNotification(
+				  'package_green.png',  // icon url - can be relative
+				  title,  // notification title
+				  message  // notification body text
+				);
+				notification.show();
+				window.setTimeout(function() { notification.cancel() }, 2500);
+			}
+
+			function writelog(message) {
+				if (logging)
+				{
+					console.log("[BG] " + message);
+				}
+			}
+
+			function onContextMenuClick(info, tab) {
+				console.log("[BG] ContextMenu Link: " + info.linkUrl);
+				var url = info.linkUrl;
+				addTask(url);
+			}
+
+			function areSettingsFilled() {
+				if (!localStorage["address"])
+					return false;
+
+				if (!localStorage["username"])
+					return false;
+
+				if (!localStorage["password"])
+					return false;
+
+				return true;
+			}
+
+			function openDownloadStationTab() {
+				chrome.tabs.create({
+					url: diskstation.getBaseUrl()+'/download/index.cgi',
+					selected: true
+					});
+			}
+
+			function openFileStationTab() {
+				chrome.tabs.create({
+					url: diskstation.getBaseUrl()+'/webfm/index.cgi',
+					selected: true
+					});
+			}
+			
+			function openAudioStationTab() {
+				chrome.tabs.create({
+					url: diskstation.getBaseUrl()+'/audio/index.cgi',
+					selected: true
+					});
+			}
+			
+			function openManagementStationTab() {
+				chrome.tabs.create({
+					url: diskstation.getBaseUrl()+'/webman/index.cgi',
+					selected: true
+					});
+			}
+			
+		</script>
+	</head>
+	<body onload="init()">
+	</body>
+</html>

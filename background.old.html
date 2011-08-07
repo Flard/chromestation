@@ -1,0 +1,102 @@
+<html>
+	<head>
+		<script type="text/javascript">
+		//@TODO: badge text: remaing / completed / total
+		//@TODO: notification when finished
+		//@TODO: contentscript: catch .torrent
+		//@TODO: popup items
+		//@TODO: Grey when uninitialized
+		//@TODO: Perform login
+		//@TODO: update frequence
+		//@TODO: Switch secure connection
+
+		var address;
+		var username;
+		var password;
+
+		var enableLogging = true;
+
+		function init()
+		{
+			reloadSettings();
+
+			updateTasks();
+		}
+
+		function reloadSettings()
+		{
+			address = localStorage["address"];
+			username = localStorage["username"];
+			password = localStorage["password"];
+			logToConsole('settings reloaded');
+		}
+
+		function updateTasks()
+		{
+			logToConsole('reloading tasks');
+			var url = 'https://' + address + '/download/downloadman.cgi?_dc=1272924459931&action=getall&start=0&limit=100&sort=task_id&dir=ASC';
+			try
+			{
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", url);
+				xhr.onreadystatechange = function(){
+					logToConsole("readystate: " + this.readyState);
+					if (this.readyState == 4) {
+						if (this.status == 200) {
+							var result = JSON.parse(this.responseText);
+							console.log(result);
+							chrome.browserAction.setBadgeText({text:result.items.length+''});
+						} else if (this.status == 401) {
+							logToConsole('login required...');
+						} else {
+							console.error("status = " + this.status);
+							login();
+							console.log(this);
+						}
+					}
+				};
+				xhr.onerror = function(e) { console.error("XHR error: " + e.message) };
+				xhr.send(null)
+			}
+			catch (e)
+			{
+				console.error("exception: " + e);
+			}
+		}
+
+		function login()
+		{
+			logToConsole('performing login');
+			var params = "username="+encodeURIComponent(username)+"&passwd="+encodeURIComponent(password);
+			var url = 'https://' + address + '/webman/modules/login.cgi';
+			
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", url);
+				xhr.onreadystatechange = function(){
+					logToConsole("readystate: " + this.readyState);
+					if (this.readyState == 4) {
+						if (this.status == 200) {
+							logToConsole('login succeeded');
+							updateTasks();
+						} else if (this.status == 401) {
+							logToConsole('login required...');
+						} else {
+							console.error("status = " + this.status);
+							console.log(this);
+						}
+					}
+				};
+				xhr.onerror = function(e) { console.error("XHR error: " + e.message) };
+				xhr.send(null)
+		}
+
+		function logToConsole(msg)
+		{
+			if (enableLogging)
+				console.log(msg);
+		}
+		</script>
+	</head>
+	<body onload="init()">
+	</body>
+</html>

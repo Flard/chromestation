@@ -1,0 +1,71 @@
+<html>
+	<head>
+		<title>ChromeStation Options</title>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				font: 10pt Arial;
+				}
+			#banner {
+				width: 100%;
+				background-color: yellow;
+				height: 75px;
+				}
+			
+			#page {
+				padding: 10px;
+				margin: 0;
+				}
+			
+			h1 {
+				margin: 0;
+				padding: 0;
+				font: bold 14pt Arial;
+				}
+		</style>
+		<script type="text/javascript">
+			function save_options() {
+				//@TODO: validate
+				localStorage["address"] = document.getElementById('address').value;
+				localStorage["username"] = document.getElementById('username').value;
+				localStorage["password"] = document.getElementById('password').value;
+			}
+
+			function restore_options() {
+				//@TODO: display empty if not set
+				document.getElementById('address').value = localStorage["address"];
+				document.getElementById('username').value = localStorage["username"];
+				document.getElementById('password').value = localStorage["password"];
+			}
+		</script>
+	</head>
+	<body onload="restore_options()">
+		<div id="banner">
+		</div>
+		<div id="page">
+			<h1>ChromeStation Options</h1>
+			<fieldset>
+				<legend>DiskStation Credentials:</legend>
+				<p>
+					<label for="address">Address (IP or hostname):</label>
+					<input type="text" name="address" id="address" />
+				</p>
+				<p>
+					<label for="username">Username:</label>
+					<input type="text" name="username" id="username" />
+				</p>
+				<p>
+					<label for="password">Password:</label>
+					<input type="password" name="password" id="password" />
+				</p>
+			</fieldset>
+			<fieldset>
+				<legend>DownloadStation Options:</legend>
+				
+			</fieldset>
+
+			<button onclick="save_options()">Save</button>
+		</div>
+	</body>
+</html>
