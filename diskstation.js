@@ -236,7 +236,7 @@ function DiskStation(logging) {
      //}, MAXIMUM_WAITING_TIME); ***
 
 		var params = "username="+encodeURIComponent(username)+"&passwd="+encodeURIComponent(password);
-		var url = baseUrl + '/webman/modules/login.cgi';
+		var url = baseUrl + '/webman/login.cgi';
 		xhr.open("POST", url);
 		xhr.send(params);
 		writelog(url, "XHR");
