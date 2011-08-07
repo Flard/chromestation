@@ -3,7 +3,7 @@
   "version": "1.0",
   "description": "Manage your Synology DiskStation from within your browser",
   "browser_action": {
-    "default_icon": "icon_gray.png",
+    "default_icon": "icons/icon_gray.png",
     "default_title": "ChromeStation",
     "default_popup": "popup-login.html"
   },
